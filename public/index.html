@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#121019">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2316131d%22%2F%3E%3Cpath%20d%3D%22M12%2022q20-9%2040%200%22%20fill%3D%22none%22%20stroke%3D%22%23f4b740%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20x%3D%2215%22%20y%3D%2232%22%20width%3D%229%22%20height%3D%229%22%20rx%3D%222.5%22%20fill%3D%22%23f4b740%22%2F%3E%3Crect%20x%3D%2227.500%22%20y%3D%2232%22%20width%3D%229%22%20height%3D%229%22%20rx%3D%222.5%22%20fill%3D%22%23efe9f7%22%2F%3E%3Crect%20x%3D%2240%22%20y%3D%2232%22%20width%3D%229%22%20height%3D%229%22%20rx%3D%222.5%22%20fill%3D%22%23efe9f7%22%2F%3E%3Crect%20x%3D%2221%22%20y%3D%2245%22%20width%3D%229%22%20height%3D%229%22%20rx%3D%222.5%22%20fill%3D%22%23efe9f7%22%2F%3E%3Crect%20x%3D%2234%22%20y%3D%2245%22%20width%3D%229%22%20height%3D%229%22%20rx%3D%222.5%22%20fill%3D%22%23efe9f7%22%2F%3E%3C%2Fsvg%3E">
+<title>Seatline demo</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #121019; color: #efe9f7; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif; }
+  body { display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+  main { width: min(360px, 100%); text-align: center; }
+  h1 { font-size: 15px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; margin: 0 0 22px; color: #a69cbb; }
+  .bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: #f4b740; border-radius: 4px; transition: width 0.2s; }
+  p { margin: 14px 0 0; color: #a69cbb; font-size: 14px; min-height: 21px; }
+  form { margin-top: 22px; display: grid; gap: 10px; }
+  input, button { font: inherit; border-radius: 12px; padding: 13px 14px; min-height: 48px; box-sizing: border-box; }
+  input { background: #1b1824; border: 1px solid #352f47; color: inherit; text-align: center; letter-spacing: 0.12em; }
+  input:focus-visible, button:focus-visible { outline: 2px solid #f4b740; outline-offset: 2px; }
+  button { background: #f4b740; color: #1f1504; border: 0; font-weight: 600; cursor: pointer; }
+  .err { color: #f0a35e; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Seatline demo</h1>
+  <div class="bar" id="bar"><i></i></div>
+  <p id="msg" role="status">Loading the demo… <span lang="th">กำลังโหลดเดโม</span></p>
+  <form id="ask" hidden>
+    <label for="code">This demo is private. Enter the access code from your invitation.<br><span lang="th">เดโมนี้เป็นแบบส่วนตัว กรุณาใส่รหัสเข้าชม</span></label>
+    <input id="code" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+    <button>Open the demo</button>
+  </form>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fill = $("bar").firstChild, msg = $("msg"), ask = $("ask"), KEY = "seatline-demo-code";
+  function say(t, err) { msg.textContent = t; msg.className = err ? "err" : ""; }
+  function codeFromLink() {
+    var m = /[#&]k=([A-Za-z0-9]+)/.exec(location.hash);
+    if (m) return m[1].toLowerCase();
+    try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; }
+  }
+  function askCode(t) { $("bar").hidden = true; ask.hidden = false; say(t || "", !!t); $("code").focus(); }
+  var packed = null;
+  function download(name) {
+    return fetch(name, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error("download");
+      var total = +r.headers.get("content-length") || 0;
+      if (!r.body || !total) return r.arrayBuffer();
+      var reader = r.body.getReader(), parts = [], got = 0;
+      return (function pump() {
+        return reader.read().then(function (x) {
+          if (x.done) { var out = new Uint8Array(got), o = 0; parts.forEach(function (p) { out.set(p, o); o += p.length; }); return out.buffer; }
+          parts.push(x.value); got += x.value.length; fill.style.width = Math.min(96, (got / total) * 96) + "%"; return pump();
+        });
+      })();
+    });
+  }
+  function unlock(code) {
+    var canGunzip = typeof DecompressionStream === "function";
+    var file = canGunzip ? "app.bin" : "app-raw.bin";
+    ask.hidden = true; $("bar").hidden = false; say("Loading the demo…");
+    if (!window.crypto || !crypto.subtle) return say("This browser cannot open the demo. Please use a current version of Chrome, Safari or Edge.", true);
+    return (packed && packed.file === file ? Promise.resolve(packed.buf) : download(file)).then(function (buf) {
+      packed = { file: file, buf: buf };
+      var b = new Uint8Array(buf), enc = new TextEncoder();
+      if (String.fromCharCode(b[0], b[1], b[2], b[3]) !== "SLN1") throw new Error("download");
+      var gz = b[4] === 1, salt = b.slice(5, 21), iv = b.slice(21, 33), data = b.slice(33);
+      return crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveKey"]).then(function (k) {
+        return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 200000, hash: "SHA-256" }, k, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      }).then(function (k) {
+        return crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, k, data).catch(function () { throw new Error("code"); });
+      }).then(function (plain) {
+        if (!gz) return plain;
+        return new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+      });
+    }).then(function (plain) {
+      fill.style.width = "100%";
+      try { localStorage.setItem(KEY, code); } catch (e) {}
+      var html = new TextDecoder().decode(plain);
+      document.open(); document.write(html); document.close();
+    }).catch(function (e) {
+      if (e && e.message === "code") { try { localStorage.removeItem(KEY); } catch (x) {} askCode("That code did not open the demo. Check it and try again."); }
+      else { $("bar").hidden = true; say("The demo could not be loaded. Check your connection and reload the page.", true); }
+    });
+  }
+  ask.addEventListener("submit", function (e) { e.preventDefault(); var c = $("code").value.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); if (c) unlock(c); });
+  var c = codeFromLink();
+  if (c) unlock(c); else askCode();
+})();
+</script>
+</body>
+</html>
